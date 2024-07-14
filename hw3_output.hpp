@@ -5,11 +5,16 @@
 #include <string>
 using namespace std;
 
+
 namespace output
 {
     void endScope();
     void printID(const string &id, int offset, const string &type);
     string makeFunctionType(const string& argType, const string& retType);
+
+
+    extern const std::string rules[];
+    void printProductionRule(const int ruleno);
 
     void errorLex(int lineno);
     void errorSyn(int lineno);
