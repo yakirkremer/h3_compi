@@ -53,6 +53,7 @@ const std::string output::rules[] = {
 };
 
 void output::printProductionRule(const int ruleno) {
+    return;
     std::cout << ruleno << ": " << output::rules[ruleno-1] << "\n";
 }
 
