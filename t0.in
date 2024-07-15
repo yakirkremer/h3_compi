@@ -1,3 +1,2 @@
-int a;
-print(a);
-int a;
+int i = 3;
+

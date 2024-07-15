@@ -53,7 +53,6 @@ const std::string output::rules[] = {
 };
 
 void output::printProductionRule(const int ruleno) {
-    return;
     std::cout << ruleno << ": " << output::rules[ruleno-1] << "\n";
 }
 
@@ -97,3 +96,4 @@ void output::errorUnexpectedContinue(int lineno) {
 void output::errorByteTooLarge(int lineno, const string& value) {
     cout << "line " << lineno << ": byte value " << value << " out of range" << endl;
 }
+

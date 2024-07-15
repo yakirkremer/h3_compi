@@ -23,12 +23,12 @@ class Node;
 
 class Node {
 public:
-    string value;
+    //vector<string> names;
+    string name;
 
-    Node(const string value = "") : value(value) {
-    };
-    Node(const Node &node): value(node.value){
-    };
+    Node(const string name = "") : name(name) {};
+    Node(const Node* node): name(node->name){};
+
     virtual ~Node() = default;
 };
 
@@ -41,28 +41,40 @@ public:
     virtual ~Type() = default;
 };
 
+class ExpNum : public Type {
+public:
+    ExpNum(): Type("int"){};
+};
+class ExpNumB : public Type {
+public:
+    ExpNumB(): Type("byte"){};
+};
+class ExpBool : public Type {
+public:
+    ExpBool(): Type("bool"){};
+};
+
+class ExpStr : public Type {
+public:
+    ExpStr(): Type("string"){};
+};
+
+class Call : public Type {
+public:
+    Call(string type,string name, string var_type): Type(type){};
+
+};
+
 class Decl : public Node {
 public:
     string type;
-
-    Decl(const Type * type,const Node * node){
-    if(CHECK)
-        std::cout << "Decl " << type->type << " " << node->value << std::endl;
+    Decl(Node * type, Node * name):Node(name), type(dynamic_cast<Type*>(type)->type){
     };
     virtual ~Decl() = default;
+
 };
 
-class Exp: public Node {
-public:
-    string type;
 
-    Exp(const string type,  Node * node): node(node),type(type){};
-    virtual ~Exp() = default;
-};
-
-class Statement: public Node {
-    Statement(Type *type, Node *id);
-};
 
 Node* makeNode(int node_type,const string type, const string value);
 

@@ -3,7 +3,7 @@
 //
 
 #include "types.h"
-
+/*
 Node *makeNode(int node_type,const string value,  const string type) {
     switch (node_type) {
         case DECL:
@@ -16,13 +16,10 @@ Node *makeNode(int node_type,const string value,  const string type) {
             return nullptr;
     }
 }
+*/
 
-Statement::Statement(Type *type, Node *id) : Node() {
 
-        std::cout << "Statement Type ID: " << type->type << " " << id->value << std::endl;
-    value = type->value;
 
-}
 
 /*
 Program: Statements                         {printProductionRule(1);}

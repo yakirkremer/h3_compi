@@ -12,10 +12,12 @@ class Symbol {
     string name;
     string type;
     int offset;
+    bool is_function;
 
 public:
-    Symbol(const string name, const string type, int offset) : name(name), type(type), offset(offset) {}
+    Symbol(const string name, const string type, int offset, bool is_function) : name(name), type(type), offset(offset),is_function(is_function) {}
     string get_name() const { return name; }
+    string get_type() const { return type; }
 
 };
 
@@ -37,7 +39,7 @@ public:
             cout << "SymbolTable created with offset " << offset << " and is_loop " << is_loop << " and return_type " << return_type << endl;
     }
 
-    void add_symbol(string name, string type, int offset);
+    bool add_symbol(string name, string type, int offset, bool is_function);
 
     bool symbol_exists(const string &name);
 
@@ -50,8 +52,10 @@ public:
     }
 };
 
+Call * CreateCall(Node *, Node *, SymbolTable*);
 
+Node * CreateExp(string name, SymbolTable *table);
 
-
+bool assign(Node *, Node *, SymbolTable*);
 
 #endif //HW3_TABLES_H
