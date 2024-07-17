@@ -140,9 +140,9 @@ void yyerror( const char* yytext) {
 }
 
 int main() {
-    sym_table_scopes.add_symbol("print", "VOID", 1,{"STRING"}, true);
-    sym_table_scopes.add_symbol("printi", "VOID", 1,{"num"}, true);
-    sym_table_scopes.add_symbol("readi", "INT", 1,{"num"} ,true);
+    sym_table_scopes.add_symbol("print", "VOID", 0,{"STRING"}, true);
+    sym_table_scopes.add_symbol("printi", "VOID", 0,{"num"}, true);
+    sym_table_scopes.add_symbol("readi", "INT", 0,{"num"} ,true);
     //yydebug = 1;
     return yyparse();
 }

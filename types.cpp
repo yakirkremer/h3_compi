@@ -110,7 +110,7 @@ Statement::Statement(Node *type, Node *name, int yylineno) {
         errorDef(yylineno,name->name);
         exit(ERROR_EXIT);
     }
-    sym_table_scopes.add_symbol(name->name,type->name,0, "", false);
+    sym_table_scopes.add_symbol(name->name,type->name,1, "", false);
 }
 
 Statement::Statement(Node *type, Node *name, Exp *exp, int yylineno, bool declare) {
@@ -121,7 +121,7 @@ Statement::Statement(Node *type, Node *name, Exp *exp, int yylineno, bool declar
             errorUndef(yylineno,name->name);
         exit(ERROR_EXIT);
     }
-    sym_table_scopes.add_symbol(name->name,type->name,0,  "", false);
+    sym_table_scopes.add_symbol(name->name,type->name,1,  "", false);
     if(exp->type != type->name){
         if(!not_num(exp->type) && !not_num(type->name)){
             return;
