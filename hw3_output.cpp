@@ -1,11 +1,26 @@
 #include <iostream>
 #include "hw3_output.hpp"
 #include <sstream>
+#include <algorithm>
+#include <cctype>
 
 using namespace std;
 
-void output::endScope(){
+string convert_num(string s){
+    if (s=="num")
+        return "INT";
+    return s;
+}
+
+void output::endScope(SymbolTable * symbolTable){
     cout << "---end scope---" << endl;
+
+    for (int i = 0; i < symbolTable->symbols.size(); ++i) {
+        if(symbolTable->symbols[i]->is_function)
+            printID(symbolTable->symbols[i]->name, symbolTable->symbols[i]->offset, "("+ convert_num(symbolTable->symbols[i]->arg_type) +")" + "->" + symbolTable->symbols[i]->type);
+        else
+            printID(symbolTable->symbols[i]->name, symbolTable->symbols[i]->offset, symbolTable->symbols[i]->type);
+    }
 }
 
 void output::printID(const string& id, int offset, const string& type) {
@@ -53,6 +68,7 @@ const std::string output::rules[] = {
 };
 
 void output::printProductionRule(const int ruleno) {
+    return;
     std::cout << ruleno << ": " << output::rules[ruleno-1] << "\n";
 }
 

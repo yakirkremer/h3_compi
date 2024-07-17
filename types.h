@@ -8,7 +8,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
-
+#include "hw3_output.hpp"
+using namespace output;
 using namespace std;
 #include "tables.h"
 
@@ -54,7 +55,7 @@ public:
 class Statement : public Node {
 public:
     Statement(Node *type, Node *name, int yylineno);
-    Statement(Node *type, Node *name, Exp *exp, int yylineno);
+    Statement(Node *type, Node *name, Exp *exp, int yylineno, bool declare);
 };
 
 class Call : public Node {

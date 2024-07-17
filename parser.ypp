@@ -50,24 +50,30 @@
 %right ELSE
 
 %%
-Program: Statements                         {printProductionRule(1);}
+Program: Statements                         {endScope(sym_table_scopes.scope);}
 Statements: Statement                       {printProductionRule(2);}
 Statements: Statements Statement            {printProductionRule(3);}
-Statement: LBRACE {sym_table_scopes.open_scope();} Statements RBRACE        {sym_table_scopes.close_scope();}
+
+Statement: LBRACE {sym_table_scopes.open_scope();} Statements RBRACE        {endScope(sym_table_scopes.scope);sym_table_scopes.close_scope();}
+
 Statement: Type ID SC                       {$$ = new Statement($1, $2,yylineno);}
-Statement: Type ID ASSIGN Exp SC            {$$ = new Statement($1, $2, dynamic_cast<Exp*>($4),yylineno);}
-Statement: ID ASSIGN Exp SC                 {printProductionRule(7);}
+Statement: Type ID ASSIGN Exp SC            {$$ = new Statement($1, $2, dynamic_cast<Exp*>($4),yylineno, true);}
+
+Statement: ID ASSIGN Exp SC                 {$$ = new Statement($1, $2, dynamic_cast<Exp*>($4),yylineno, false);}
 Statement: Call SC                          {printProductionRule(8);}
 Statement: RETURN SC                        {printProductionRule(9);}
-Statement: IF LPAREN Exp RPAREN {sym_table_scopes.open_scope();} Statement   {sym_table_scopes.close_scope();}
-Statement: IF LPAREN Exp RPAREN {sym_table_scopes.open_scope();} Statement {sym_table_scopes.close_scope();} ELSE {sym_table_scopes.open_scope();} Statement {sym_table_scopes.close_scope();}
-Statement: WHILE LPAREN Exp RPAREN {sym_table_scopes.open_scope();} Statement {sym_table_scopes.close_scope();}
+Statement: IF LPAREN Exp RPAREN {sym_table_scopes.open_scope();} Statement   {endScope(sym_table_scopes.scope);sym_table_scopes.close_scope();}
+Statement: IF LPAREN Exp RPAREN {sym_table_scopes.open_scope();} Statement {endScope(sym_table_scopes.scope);sym_table_scopes.close_scope();} ELSE {sym_table_scopes.open_scope();} Statement {endScope(sym_table_scopes.scope);sym_table_scopes.close_scope();}
+Statement: WHILE LPAREN Exp RPAREN {sym_table_scopes.open_scope();} Statement {endScope(sym_table_scopes.scope);sym_table_scopes.close_scope();}
 Statement: BREAK SC                         {printProductionRule(13);}
 Statement: CONTINUE SC                      {printProductionRule(14);}
+
 Call: ID LPAREN Exp RPAREN                  {$$ = new Call($1, dynamic_cast<Exp*>($3),yylineno);}
-Type: INT                                   {printProductionRule(16);}
-Type: BYTE                                  {printProductionRule(17);}
-Type: BOOL                                  {printProductionRule(18);}
+
+Type: INT                                   {}
+Type: BYTE                                  {}
+Type: BOOL                                  {}
+
 Exp: LPAREN Exp RPAREN                      {printProductionRule(19);}
 
 Exp: Exp MULTIPLICATIVE Exp                 {$$ = new Exp("binop", dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
@@ -76,17 +82,17 @@ Exp: Exp ADDITIVE Exp                       {$$ = new Exp("binop", dynamic_cast<
 Exp: ID                                     {$$ = new Exp($1->name,$1,true,yylineno);}
 Exp: Call                                   {$$ = new Exp($1->name,$1,true,yylineno);}
 
-Exp: NUM                                    {$$ = new Exp("int",$1);}
-Exp: NUM B                                  {$$ = new Exp("byte",$1);}
-Exp: STRING                                 {$$ = new Exp("string",$1);}
-Exp: TRUE                                   {$$ = new Exp("bool",$1);}
-Exp: FALSE                                  {$$ = new Exp("bool",$1);}
+Exp: NUM                                    {$$ = new Exp("INT",$1);}
+Exp: NUM B                                  {$$ = new Exp("BYTE",$1);}
+Exp: STRING                                 {$$ = new Exp("STRING",$1);}
+Exp: TRUE                                   {$$ = new Exp("BOOL",$1);}
+Exp: FALSE                                  {$$ = new Exp("BOOL",$1);}
 
-Exp: NOT Exp                                {$$ = new Exp("bool", $1->name, dynamic_cast<Exp*>($2), nullptr,yylineno);}
-Exp: Exp AND Exp                            {$$ = new Exp("bool", $2->name, dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
-Exp: Exp OR Exp                             {$$ = new Exp("bool", $2->name, dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
-Exp: Exp RELOP Exp                          {$$ = new Exp("bool", "relop", dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
-Exp: Exp EQUALITY Exp                       {$$ = new Exp("bool", "relop", dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
+Exp: NOT Exp                                {$$ = new Exp("BOOL", $1->name, dynamic_cast<Exp*>($2), nullptr,yylineno);}
+Exp: Exp AND Exp                            {$$ = new Exp("BOOL", $2->name, dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
+Exp: Exp OR Exp                             {$$ = new Exp("BOOL", $2->name, dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
+Exp: Exp RELOP Exp                          {$$ = new Exp("BOOL", "relop", dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
+Exp: Exp EQUALITY Exp                       {$$ = new Exp("BOOL", "relop", dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
 
 Exp: LPAREN Type RPAREN Exp                 {printProductionRule(32);}
 
@@ -134,9 +140,9 @@ void yyerror( const char* yytext) {
 }
 
 int main() {
-    sym_table_scopes.add_symbol("print", "void", 1,{"string"}, true);
-    sym_table_scopes.add_symbol("printi", "void", 1,{"num"}, true);
-    sym_table_scopes.add_symbol("readi", "int", 1,{"num"} ,true);
+    sym_table_scopes.add_symbol("print", "VOID", 1,{"STRING"}, true);
+    sym_table_scopes.add_symbol("printi", "VOID", 1,{"num"}, true);
+    sym_table_scopes.add_symbol("readi", "INT", 1,{"num"} ,true);
     //yydebug = 1;
     return yyparse();
 }

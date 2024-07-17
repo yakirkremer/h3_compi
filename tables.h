@@ -8,9 +8,10 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include "hw3_output.hpp"
-using namespace output;
+
 #define CHECK false
+
+
 using namespace std;
 
 class Symbol {
@@ -41,11 +42,9 @@ public:
     SymbolTable(int offset)
             :max_offset(offset),offset(offset) {
         this->symbols = vector<Symbol *>();
-        if(CHECK)
-            cout << "SymbolTable created with offset " << offset   << endl;
     }
 
-    bool add_symbol(string name, string type, int size, bool is_function, vector<string> types);
+    bool add_symbol(string name, string type, int size, bool is_function, string arg_type);
 
     bool symbol_exists(const string &name);
 
@@ -65,7 +64,7 @@ public:
 
     Scopes();
 
-    bool add_symbol(const string &name, const string &type, int size,vector<string> arg_types, bool is_function);
+    bool add_symbol(const string &name, const string &type, int size,string arg_type, bool is_function);
     bool symbol_exists(const string &name);
     Symbol* get_symbol(const string &name);
     void open_scope();

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include "tables.h"
 using namespace std;
 
 #define LEX_ERROR 1
@@ -18,7 +19,7 @@ using namespace std;
 
 namespace output
 {
-    void endScope();
+    void endScope(SymbolTable * symbolTable);
     void printID(const string &id, int offset, const string &type);
     string makeFunctionType(const string& argType, const string& retType);
 

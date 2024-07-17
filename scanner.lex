@@ -16,10 +16,10 @@ printable [ -~]
 escape [\n]
 
 %%
-int                     yylval=new Node(yytext);    return INT;
-byte                    yylval=new Node(yytext);    return BYTE;
+int                     yylval=new Node("INT");    return INT;
+byte                    yylval=new Node("BYTE");    return BYTE;
 b                       yylval=new Node(yytext);    return B;
-bool                    yylval=new Node(yytext);    return BOOL;
+bool                    yylval=new Node("BOOL");    return BOOL;
 and                     yylval=new Node(yytext);  return AND;
 or                      yylval=new Node(yytext);  return OR;
 not                     yylval=new Node(yytext);  return NOT;
