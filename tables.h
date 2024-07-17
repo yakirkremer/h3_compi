@@ -4,58 +4,76 @@
 
 #ifndef HW3_TABLES_H
 #define HW3_TABLES_H
-#include "types.h"
 
-
+#include <string>
+#include <vector>
+#include <iostream>
+#include "hw3_output.hpp"
+using namespace output;
+#define CHECK false
+using namespace std;
 
 class Symbol {
+public:
     string name;
     string type;
+    string arg_type;
     int offset;
     bool is_function;
 
-public:
-    Symbol(const string name, const string type, int offset, bool is_function) : name(name), type(type), offset(offset),is_function(is_function) {}
+
+    Symbol(const string name, const string type, int offset, bool is_function,const string arg_type =  "") : name(name), type(type), offset(offset),is_function(is_function), arg_type(arg_type) {}
     string get_name() const { return name; }
     string get_type() const { return type; }
+    string get_arg_type() const { return arg_type; }
 
 };
 
 class SymbolTable {
+public:
     vector<Symbol *> symbols;
     int offset;
     int max_offset;
-    bool is_loop;
-    string *return_type;
 
-public:
+
     Symbol* get_symbol(int index) const { return symbols[index]; }
     int get_size() const { return symbols.size(); }
-    SymbolTable(int offset, bool is_loop, string return_type = "")
-            :max_offset(offset), is_loop(is_loop),offset(offset) {
-        this->return_type = new string(return_type);
+    SymbolTable(int offset)
+            :max_offset(offset),offset(offset) {
         this->symbols = vector<Symbol *>();
         if(CHECK)
-            cout << "SymbolTable created with offset " << offset << " and is_loop " << is_loop << " and return_type " << return_type << endl;
+            cout << "SymbolTable created with offset " << offset   << endl;
     }
 
-    bool add_symbol(string name, string type, int offset, bool is_function);
+    bool add_symbol(string name, string type, int size, bool is_function, vector<string> types);
 
     bool symbol_exists(const string &name);
 
     Symbol *get_symbol(const string &name);
 
     ~SymbolTable() {
-        delete return_type;
         for (auto it = symbols.begin(); it != symbols.end(); it++)
             delete (*it);
     }
 };
 
-Call * CreateCall(Node *, Node *, SymbolTable*);
+class Scopes {
+public:
+    vector<SymbolTable *> table_scopes;
+    vector<int> offsets;
+    SymbolTable * scope;
 
-Node * CreateExp(string name, SymbolTable *table);
+    Scopes();
 
-bool assign(Node *, Node *, SymbolTable*);
+    bool add_symbol(const string &name, const string &type, int size,vector<string> arg_types, bool is_function);
+    bool symbol_exists(const string &name);
+    Symbol* get_symbol(const string &name);
+    void open_scope();
+    void close_scope();
+
+
+};
+
+
 
 #endif //HW3_TABLES_H

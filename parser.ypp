@@ -9,7 +9,8 @@
     using namespace output;
     extern int yylineno;
     void yyerror(const char*);
-    SymbolTable sym_table(0,false);
+    extern Scopes sym_table_scopes = Scopes();
+
 
 %}
 
@@ -49,75 +50,49 @@
 %right ELSE
 
 %%
-
-
 Program: Statements                         {printProductionRule(1);}
-Statements:  Statement                       {printProductionRule(2);}
-|  Statements Statement            {printProductionRule(3);}
+Statements: Statement                       {printProductionRule(2);}
+Statements: Statements Statement            {printProductionRule(3);}
+Statement: LBRACE {sym_table_scopes.open_scope();} Statements RBRACE        {sym_table_scopes.close_scope();}
+Statement: Type ID SC                       {$$ = new Statement($1, $2,yylineno);}
+Statement: Type ID ASSIGN Exp SC            {$$ = new Statement($1, $2, dynamic_cast<Exp*>($4),yylineno);}
+Statement: ID ASSIGN Exp SC                 {printProductionRule(7);}
+Statement: Call SC                          {printProductionRule(8);}
+Statement: RETURN SC                        {printProductionRule(9);}
+Statement: IF LPAREN Exp RPAREN {sym_table_scopes.open_scope();} Statement   {sym_table_scopes.close_scope();}
+Statement: IF LPAREN Exp RPAREN {sym_table_scopes.open_scope();} Statement {sym_table_scopes.close_scope();} ELSE {sym_table_scopes.open_scope();} Statement {sym_table_scopes.close_scope();}
+Statement: WHILE LPAREN Exp RPAREN {sym_table_scopes.open_scope();} Statement {sym_table_scopes.close_scope();}
+Statement: BREAK SC                         {printProductionRule(13);}
+Statement: CONTINUE SC                      {printProductionRule(14);}
+Call: ID LPAREN Exp RPAREN                  {$$ = new Call($1, dynamic_cast<Exp*>($3),yylineno);}
+Type: INT                                   {printProductionRule(16);}
+Type: BYTE                                  {printProductionRule(17);}
+Type: BOOL                                  {printProductionRule(18);}
+Exp: LPAREN Exp RPAREN                      {printProductionRule(19);}
 
-Statement:  LBRACE Statements RBRACE         {printProductionRule(4);}
-|  Decl SC                       {printProductionRule(5);}
-|  Decl ASSIGN Exp SC            {if(!assign($3, $1, &sym_table)) yyerror("2");}
-|  ID ASSIGN Exp SC                 {if(!assign($3, $1, &sym_table)) yyerror("2");}
-|  Call SC                          {printProductionRule(8);}
-|  RETURN SC                        {printProductionRule(9);}
+Exp: Exp MULTIPLICATIVE Exp                 {$$ = new Exp("binop", dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
+Exp: Exp ADDITIVE Exp                       {$$ = new Exp("binop", dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
 
-|  IF LPAREN ExpBool RPAREN Statement   {printProductionRule(10);}
-|  IF LPAREN ExpBool RPAREN Statement ELSE Statement    {printProductionRule(11);}
+Exp: ID                                     {$$ = new Exp($1->name,$1,true,yylineno);}
+Exp: Call                                   {$$ = new Exp($1->name,$1,true,yylineno);}
 
-|  WHILE LPAREN Exp RPAREN Statement    {printProductionRule(12);}
-|  BREAK SC                         {printProductionRule(13);}
-|  CONTINUE SC                      {printProductionRule(14);}
+Exp: NUM                                    {$$ = new Exp("int",$1);}
+Exp: NUM B                                  {$$ = new Exp("byte",$1);}
+Exp: STRING                                 {$$ = new Exp("string",$1);}
+Exp: TRUE                                   {$$ = new Exp("bool",$1);}
+Exp: FALSE                                  {$$ = new Exp("bool",$1);}
 
+Exp: NOT Exp                                {$$ = new Exp("bool", $1->name, dynamic_cast<Exp*>($2), nullptr,yylineno);}
+Exp: Exp AND Exp                            {$$ = new Exp("bool", $2->name, dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
+Exp: Exp OR Exp                             {$$ = new Exp("bool", $2->name, dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
+Exp: Exp RELOP Exp                          {$$ = new Exp("bool", "relop", dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
+Exp: Exp EQUALITY Exp                       {$$ = new Exp("bool", "relop", dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
 
-Call: ID LPAREN Exp RPAREN                  { if(($$ = CreateCall($1,$3,&sym_table)) == nullptr) yyerror("2");}
-
-Decl: Type ID                             {if(sym_table.add_symbol($2->name, dynamic_cast<Type*>($1)->type,  DEF_SIZE, false) == false) yyerror("2");$$ = new Decl($1,$2);}
-
-
-Exp: ExpNum                                {}
-| ExpStr                                {}
-
-Type: INT                                   {$$ = new Type("int");}
-Type: BYTE                                  {$$ = new Type("byte");}
-Type: BOOL                                  {$$ = new Type("bool");}
-
-Exp: LPAREN Exp RPAREN                      {}
-Exp: Exp MULTIPLICATIVE Exp                 {printProductionRule(20);}
-Exp: Exp ADDITIVE Exp                       {printProductionRule(20);}
-
-Exp: ID                                     {if(($$ = CreateExp($1->name, &sym_table)) == nullptr) yyerror("2");}
-Exp: Call                                   {if(($$ = CreateExp($1->name, &sym_table)) == nullptr) yyerror("2");}
-
-ExpNum: NUM                                 {$$ = new ExpNum();}
-| NUM B                                    {$$ = new ExpNumB();}
-| ExpNum ADDITIVE ExpNum                    {$$ = new ExpNum();}
-| ExpNum MULTIPLICATIVE ExpNum              {$$ = new ExpNum();}
-
-ExpStr: STRING                                 {$$ = new ExpStr();}
-
-ExpBool: TRUE                                   {$$ = new ExpBool();}
-| FALSE                                  { $$ = new ExpBool();}
-| NOT ExpBool                                {$$ = new ExpBool();}
-| Exp AND Exp                            {$$ = new ExpBool();}
-| Exp OR Exp                             {$$ = new ExpBool();}
-| ExpNum RELOP ExpNum                          {$$ = new ExpBool();}
-| ExpNum EQUALITY ExpNum                       {$$ = new ExpBool();}
-| LPAREN Type RPAREN Exp                 {printProductionRule(32);}
-
-
-
-
-
-
-
-
-
-
-
-
+Exp: LPAREN Type RPAREN Exp                 {printProductionRule(32);}
 
 %%
+
+
 
 void yyerror( const char* yytext) {
     switch(atoi(yytext)) {
@@ -159,9 +134,9 @@ void yyerror( const char* yytext) {
 }
 
 int main() {
-    sym_table.add_symbol("print", "void", 1, true);
-    sym_table.add_symbol("printi", "void", 1, true);
-    sym_table.add_symbol("readi", "int", 1, true);
+    sym_table_scopes.add_symbol("print", "void", 1,{"string"}, true);
+    sym_table_scopes.add_symbol("printi", "void", 1,{"num"}, true);
+    sym_table_scopes.add_symbol("readi", "int", 1,{"num"} ,true);
     //yydebug = 1;
     return yyparse();
 }

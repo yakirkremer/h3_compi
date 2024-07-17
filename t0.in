@@ -1,2 +1,4 @@
-int i = 3;
-
+int x = 4;
+byte y = 100 b;
+x = y;
+if (a > y)

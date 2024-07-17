@@ -3,6 +3,9 @@
 //
 
 #include "types.h"
+
+#include "hw3_output.hpp"
+using namespace output;
 /*
 Node *makeNode(int node_type,const string value,  const string type) {
     switch (node_type) {
@@ -17,6 +20,100 @@ Node *makeNode(int node_type,const string value,  const string type) {
     }
 }
 */
+
+bool not_num(const string type) {
+    if(type != "num" && type != "byte")
+        return true;
+    return false;
+}
+
+Node::Node(const string name) : name(name) {};
+Node::Node(const Node* node): name(node->name){};
+
+Exp::Exp(const string type, Node * node) : Node(node),type(type),is_var(false) {}
+
+Exp::Exp(const std::string type, const std::string op, Exp *exp1, Exp *exp2, int yylineno): type(type){
+
+    //NOT Exp
+    if(op == "not" && exp1->type != "bool"){
+        errorMismatch(yylineno);
+        exit(ERROR_EXIT);
+    }
+    //Exp AND Exp
+    if(op == "and" || op == "or" ){
+        if(exp1->type != "bool" || exp2->type != "bool"){
+            errorMismatch(yylineno);
+            exit(ERROR_EXIT);
+        }
+    }
+    //Exp RELOP Exp Exp EQUALITY Exp
+    if(op == "relop"){
+        if(not_num(exp1->type) || not_num(exp2->type)){
+            errorMismatch(yylineno);
+            exit(ERROR_EXIT);
+        }
+    }
+
+
+
+}
+Exp::Exp(const std::string op, Exp *exp1, Exp *exp2, int yylineno) {
+    //Exp MULTIPLICATIVE Exp
+        if(not_num(exp1->type) || not_num(exp2->type)){
+            errorMismatch(yylineno);
+            exit(ERROR_EXIT);
+        }
+        if(exp1->type == "int" || exp2->type == "int"){
+            this->type = "int";
+            return;
+        }
+
+        else{
+            this->type = "byte";
+        }
+
+}
+Exp::Exp(const std::string name,Node * node, bool is_var, int yylineno): Node(node),is_var(is_var) {
+    if(this->is_var){
+        cout << "EXPP()" << endl;
+        if(sym_table_scopes.symbol_exists(name) == false){
+            errorUndef(yylineno,name);
+            exit(ERROR_EXIT);
+        }
+        cout << "exist" << endl;
+        this->type = sym_table_scopes.get_symbol(name)->get_type();
+    }
+}
+
+Call::Call(Node *node, Exp *exp, int yylineno) : Node(node){
+    if(sym_table_scopes.symbol_exists(node->name) == false){
+        errorUndefFunc(yylineno,node->name);
+        exit(ERROR_EXIT);
+    }
+    this->type = sym_table_scopes.get_symbol(node->name)->get_type();
+    if(exp->type != sym_table_scopes.get_symbol(node->name)->get_arg_type()){
+        errorPrototypeMismatch(yylineno,node->name,sym_table_scopes.get_symbol(node->name)->get_arg_type());
+        exit(ERROR_EXIT);
+    }
+
+}
+
+Statement::Statement(Node *type, Node *name, int yylineno) {
+    if(sym_table_scopes.add_symbol(name->name,type->name,0, {}, false) == false){
+        errorDef(yylineno,name->name);
+        exit(ERROR_EXIT);
+    }
+}
+Statement::Statement(Node *type, Node *name, Exp *exp, int yylineno) {
+    if(sym_table_scopes.add_symbol(name->name,type->name,0,  {}, false) == false){
+        errorDef(yylineno,name->name);
+        exit(ERROR_EXIT);
+    }
+    if(exp->type != type->name){
+        errorMismatch(yylineno);
+        exit(ERROR_EXIT);
+    }
+}
 
 
 
