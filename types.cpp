@@ -30,7 +30,27 @@ bool not_num(const string type) {
 Node::Node(const string name) : name(name) {};
 Node::Node(const Node* node): name(node->name){};
 
-Exp::Exp(const string type, Node * node) : Node(node),type(type),is_var(false) {}
+Exp::Exp(Exp *exp, const std::string type, int yylineno) {
+    if(not_num(type) || not_num(exp->type)){
+        if(exp->type != type){
+            errorMismatch(yylineno);
+            exit(ERROR_EXIT);
+        }
+    }
+    this->type = type;
+    val = exp->val;
+    is_var = exp->is_var;
+    name = exp->name;
+
+
+}
+
+Exp::Exp(const string type, Node * node) : Node(node),type(type),is_var(false) {
+if(type == "BYTE")
+    val = stoi(node->name);
+else
+    val = 0;
+}
 
 Exp::Exp(const std::string type, const std::string op, Exp *exp1, Exp *exp2, int yylineno): type(type){
 
@@ -69,6 +89,10 @@ Exp::Exp(const std::string op, Exp *exp1, Exp *exp2, int yylineno) {
         }
 
         else{
+            if(op == "add")
+                this->val = exp1->val +exp2->val;
+            if(op == "mul")
+                this->val = exp1->val * exp2->val;
             this->type = "BYTE";
         }
 
@@ -113,16 +137,38 @@ Statement::Statement(Node *type, Node *name, int yylineno) {
     sym_table_scopes.add_symbol(name->name,type->name,1, "", false);
 }
 
+//assign
+Statement::Statement( Node *name, Exp *exp, int yylineno, bool declare) {
+    if(sym_table_scopes.symbol_exists(name->name) == false){
+        errorUndef(yylineno,name->name);
+        exit(ERROR_EXIT);
+    }
+    string type_s = sym_table_scopes.get_symbol(name->name)->get_type();
+    if(type_s == "BYTE" && exp->val >= 255 ){
+        errorByteTooLarge(yylineno,"");
+        exit(ERROR_EXIT);
+    }
+    if(exp->type != type_s){
+        if(!not_num(exp->type) && !not_num(type_s)){
+            return;
+        }
+        errorMismatch(yylineno);
+        exit(ERROR_EXIT);
+    }
+}
+//assign_declare
 Statement::Statement(Node *type, Node *name, Exp *exp, int yylineno, bool declare) {
-    if(sym_table_scopes.symbol_exists(name->name) == declare){
-        if(declare == true)
-            errorDef(yylineno,name->name);
-        else
-            errorUndef(yylineno,name->name);
+    if(sym_table_scopes.symbol_exists(name->name) == true){
+        errorDef(yylineno,name->name);
+        exit(ERROR_EXIT);
+    }
+    string type_s = type->name;
+    if(type_s == "BYTE" && exp->val >= 255 ){
+        errorByteTooLarge(yylineno,"");
         exit(ERROR_EXIT);
     }
     sym_table_scopes.add_symbol(name->name,type->name,1,  "", false);
-    if(exp->type != type->name){
+    if(exp->type != type_s){
         if(!not_num(exp->type) && !not_num(type->name)){
             return;
         }
@@ -130,8 +176,15 @@ Statement::Statement(Node *type, Node *name, Exp *exp, int yylineno, bool declar
         exit(ERROR_EXIT);
     }
 
+
 }
 
+Statement::Statement(Exp *exp, const std::string type, int yylineno) {
+    if(exp->type != type){
+        errorMismatch(yylineno);
+        exit(ERROR_EXIT);
+    }
+}
 
 
 

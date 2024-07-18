@@ -101,4 +101,8 @@ void Scopes::close_scope() {
 
 }
 
+bool Scopes::in_loop() {
+    return scope->is_loop;
+}
+
 

@@ -35,7 +35,7 @@ public:
     vector<Symbol *> symbols;
     int offset;
     int max_offset;
-
+    bool is_loop;
 
     Symbol* get_symbol(int index) const { return symbols[index]; }
     int get_size() const { return symbols.size(); }
@@ -69,6 +69,7 @@ public:
     Symbol* get_symbol(const string &name);
     void open_scope();
     void close_scope();
+    bool in_loop();
 
 
 };

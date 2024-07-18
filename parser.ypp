@@ -51,33 +51,37 @@
 
 %%
 Program: Statements                         {endScope(sym_table_scopes.scope);}
-Statements: Statement                       {printProductionRule(2);}
-Statements: Statements Statement            {printProductionRule(3);}
+Statements: Statement                       {}
+Statements: Statements Statement            {}
 
 Statement: LBRACE {sym_table_scopes.open_scope();} Statements RBRACE        {endScope(sym_table_scopes.scope);sym_table_scopes.close_scope();}
 
 Statement: Type ID SC                       {$$ = new Statement($1, $2,yylineno);}
 Statement: Type ID ASSIGN Exp SC            {$$ = new Statement($1, $2, dynamic_cast<Exp*>($4),yylineno, true);}
 
-Statement: ID ASSIGN Exp SC                 {$$ = new Statement($1, $2, dynamic_cast<Exp*>($4),yylineno, false);}
-Statement: Call SC                          {printProductionRule(8);}
-Statement: RETURN SC                        {printProductionRule(9);}
-Statement: IF LPAREN Exp RPAREN {sym_table_scopes.open_scope();} Statement   {endScope(sym_table_scopes.scope);sym_table_scopes.close_scope();}
-Statement: IF LPAREN Exp RPAREN {sym_table_scopes.open_scope();} Statement {endScope(sym_table_scopes.scope);sym_table_scopes.close_scope();} ELSE {sym_table_scopes.open_scope();} Statement {endScope(sym_table_scopes.scope);sym_table_scopes.close_scope();}
-Statement: WHILE LPAREN Exp RPAREN {sym_table_scopes.open_scope();} Statement {endScope(sym_table_scopes.scope);sym_table_scopes.close_scope();}
-Statement: BREAK SC                         {printProductionRule(13);}
-Statement: CONTINUE SC                      {printProductionRule(14);}
+Statement: ID ASSIGN Exp SC                 {$$ = new Statement($1, dynamic_cast<Exp*>($3),yylineno, true);}
+Statement: Call SC                          {$$ =$1;}
+Statement: RETURN SC                        {$$ =$1;}
+Statement: Condition {}
+| Condition ELSE {sym_table_scopes.open_scope();} Statement {endScope(sym_table_scopes.scope);sym_table_scopes.close_scope();}
+Condition:      IF LPAREN Exp                       {$$ = new Statement(dynamic_cast<Exp*>($3), "BOOL",yylineno);} RPAREN {sym_table_scopes.open_scope();} Statement {endScope(sym_table_scopes.scope);sym_table_scopes.close_scope();}
+
+
+
+Statement: WHILE LPAREN Exp {$$ = new Statement(dynamic_cast<Exp*>($3), "BOOL",yylineno);} RPAREN {sym_table_scopes.open_scope();} Statement {endScope(sym_table_scopes.scope);sym_table_scopes.close_scope();}
+Statement: BREAK SC                         {if(!sym_table_scopes.in_loop()) errorUnexpectedBreak(yylineno);}
+Statement: CONTINUE SC                      {if(!sym_table_scopes.in_loop()) errorUnexpectedContinue(yylineno);}
 
 Call: ID LPAREN Exp RPAREN                  {$$ = new Call($1, dynamic_cast<Exp*>($3),yylineno);}
 
-Type: INT                                   {}
-Type: BYTE                                  {}
-Type: BOOL                                  {}
+Type: INT                                   {$$ =$1;}
+Type: BYTE                                  {$$ =$1;}
+Type: BOOL                                  {$$ =$1;}
 
-Exp: LPAREN Exp RPAREN                      {printProductionRule(19);}
+Exp: LPAREN Exp RPAREN                      {$$ = $2;}
 
-Exp: Exp MULTIPLICATIVE Exp                 {$$ = new Exp("binop", dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
-Exp: Exp ADDITIVE Exp                       {$$ = new Exp("binop", dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
+Exp: Exp MULTIPLICATIVE Exp                 {$$ = new Exp("mul", dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
+Exp: Exp ADDITIVE Exp                       {$$ = new Exp("add", dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
 
 Exp: ID                                     {$$ = new Exp($1->name,$1,true,yylineno);}
 Exp: Call                                   {$$ = new Exp($1->name,$1,true,yylineno);}
@@ -94,48 +98,14 @@ Exp: Exp OR Exp                             {$$ = new Exp("BOOL", $2->name, dyna
 Exp: Exp RELOP Exp                          {$$ = new Exp("BOOL", "relop", dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
 Exp: Exp EQUALITY Exp                       {$$ = new Exp("BOOL", "relop", dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
 
-Exp: LPAREN Type RPAREN Exp                 {printProductionRule(32);}
+Exp: LPAREN Type RPAREN Exp                 {$$ = new Exp(dynamic_cast<Exp*>($4), $2->name,yylineno);}
 
 %%
 
 
 
 void yyerror( const char* yytext) {
-    switch(atoi(yytext)) {
-        case LEX_ERROR:
-            output::errorLex(yylineno);
-            break;
-        case SYNTAX_ERROR:
-            output::errorSyn(yylineno);
-            break;
-        case UNDEFINED_ERROR:
-            output::errorUndef(yylineno, yytext);
-            break;
-        case DEFINED_ERROR:
-            output::errorDef(yylineno, yytext);
-            break;
-        case UNDEFINED_FUNC_ERROR:
-            output::errorUndefFunc(yylineno, yytext);
-            break;
-        case MISMATCH_ERROR:
-            output::errorMismatch(yylineno);
-            break;
-        case PROTOTYPE_MISMATCH_ERROR:
-            output::errorPrototypeMismatch(yylineno, yytext, "void");
-            break;
-        case UNEXPECTED_BREAK_ERROR:
-            output::errorUnexpectedBreak(yylineno);
-            break;
-        case UNEXPECTED_CONTINUE_ERROR:
-            output::errorUnexpectedContinue(yylineno);
-            break;
-        case BYTE_TOO_LARGE_ERROR:
-            output::errorByteTooLarge(yylineno, yytext);
-            break;
-
-    }
-
-    exit(1);
+    errorSyn(yylineno);
 
 }
 

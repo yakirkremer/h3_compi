@@ -17,7 +17,7 @@ void output::endScope(SymbolTable * symbolTable){
 
     for (int i = 0; i < symbolTable->symbols.size(); ++i) {
         if(symbolTable->symbols[i]->is_function)
-            printID(symbolTable->symbols[i]->name, symbolTable->symbols[i]->offset, "("+ convert_num(symbolTable->symbols[i]->arg_type) +")" + "->" + symbolTable->symbols[i]->type);
+            printID(symbolTable->symbols[i]->name, symbolTable->symbols[i]->offset,makeFunctionType(convert_num(symbolTable->symbols[i]->arg_type),symbolTable->symbols[i]->type));
         else
             printID(symbolTable->symbols[i]->name, symbolTable->symbols[i]->offset, symbolTable->symbols[i]->type);
     }

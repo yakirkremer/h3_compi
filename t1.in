@@ -6,7 +6,3 @@ if (y < x) {
     print("bad");
 }
 int z;
-if(true){
-int w;
-}
-int g;

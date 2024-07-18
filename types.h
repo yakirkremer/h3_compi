@@ -47,7 +47,7 @@ public:
 
 class Statements : public Node {
 public:
-
+    string statement_type;
     Statements(Node *statement);
     Statements(Node *statement, Node *statements, int yylineno);
 };
@@ -55,7 +55,9 @@ public:
 class Statement : public Node {
 public:
     Statement(Node *type, Node *name, int yylineno);
+    Statement( Node *name, Exp *exp, int yylineno, bool declare);
     Statement(Node *type, Node *name, Exp *exp, int yylineno, bool declare);
+    Statement(Exp * exp, const string type, int yylineno);
 };
 
 class Call : public Node {
@@ -74,6 +76,9 @@ class Exp : public Node {
 public:
     string type;
     bool is_var;
+    int val =0;
+    //Casting
+    Exp(Exp* exp, const string type, int yylineno);
     //NUM NUM B STRING TRUE FALSE
     Exp(const string type, Node * node);
     // Not EXP ,AND,OR,RELOP, EQUALITY
