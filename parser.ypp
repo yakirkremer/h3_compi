@@ -68,9 +68,9 @@ Condition:      IF LPAREN Exp                       {$$ = new Statement(dynamic_
 
 
 
-Statement: WHILE LPAREN Exp {$$ = new Statement(dynamic_cast<Exp*>($3), "BOOL",yylineno);} RPAREN {sym_table_scopes.open_scope();} Statement {endScope(sym_table_scopes.scope);sym_table_scopes.close_scope();}
-Statement: BREAK SC                         {if(!sym_table_scopes.in_loop()) errorUnexpectedBreak(yylineno);}
-Statement: CONTINUE SC                      {if(!sym_table_scopes.in_loop()) errorUnexpectedContinue(yylineno);}
+Statement: WHILE LPAREN Exp {$$ = new Statement(dynamic_cast<Exp*>($3), "BOOL",yylineno);} RPAREN {sym_table_scopes.open_scope(true);} Statement {endScope(sym_table_scopes.scope);sym_table_scopes.close_scope();}
+Statement: BREAK SC                         {if(!sym_table_scopes.in_loop()) {errorUnexpectedBreak(yylineno);exit(ERROR_EXIT);}}
+Statement: CONTINUE SC                      {if(!sym_table_scopes.in_loop()) {errorUnexpectedContinue(yylineno);exit(ERROR_EXIT);}}
 
 Call: ID LPAREN Exp RPAREN                  {$$ = new Call($1, dynamic_cast<Exp*>($3),yylineno);}
 
@@ -84,13 +84,13 @@ Exp: Exp MULTIPLICATIVE Exp                 {$$ = new Exp("mul", dynamic_cast<Ex
 Exp: Exp ADDITIVE Exp                       {$$ = new Exp("add", dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}
 
 Exp: ID                                     {$$ = new Exp($1->name,$1,true,yylineno);}
-Exp: Call                                   {$$ = new Exp($1->name,$1,true,yylineno);}
+Exp: Call                                   {$$ = new Exp($1->name,$1,false,yylineno);}
 
-Exp: NUM                                    {$$ = new Exp("INT",$1);}
-Exp: NUM B                                  {$$ = new Exp("BYTE",$1);}
-Exp: STRING                                 {$$ = new Exp("STRING",$1);}
-Exp: TRUE                                   {$$ = new Exp("BOOL",$1);}
-Exp: FALSE                                  {$$ = new Exp("BOOL",$1);}
+Exp: NUM                                    {$$ = new Exp("INT",$1,yylineno);}
+Exp: NUM B                                  {$$ = new Exp("BYTE",$1,yylineno);}
+Exp: STRING                                 {$$ = new Exp("STRING",$1,yylineno);}
+Exp: TRUE                                   {$$ = new Exp("BOOL",$1,yylineno);}
+Exp: FALSE                                  {$$ = new Exp("BOOL",$1,yylineno);}
 
 Exp: NOT Exp                                {$$ = new Exp("BOOL", $1->name, dynamic_cast<Exp*>($2), nullptr,yylineno);}
 Exp: Exp AND Exp                            {$$ = new Exp("BOOL", $2->name, dynamic_cast<Exp*>($1), dynamic_cast<Exp*>($3),yylineno);}

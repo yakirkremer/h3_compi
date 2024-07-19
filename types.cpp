@@ -45,9 +45,21 @@ Exp::Exp(Exp *exp, const std::string type, int yylineno) {
 
 }
 
-Exp::Exp(const string type, Node * node) : Node(node),type(type),is_var(false) {
-if(type == "BYTE")
-    val = stoi(node->name);
+Exp::Exp(const string type, Node * node, int yylineno) : Node(node),type(type),is_var(false) {
+if(type == "BYTE"){
+    try {
+        val = stoi(node->name);
+    }
+    catch (exception &e){
+        errorByteTooLarge(yylineno,node->name);
+        exit(ERROR_EXIT);
+    }
+    if(val >= 255) {
+        errorByteTooLarge(yylineno, node->name);
+        exit(ERROR_EXIT);
+    }
+
+}
 else
     val = 0;
 }
@@ -99,16 +111,18 @@ Exp::Exp(const std::string op, Exp *exp1, Exp *exp2, int yylineno) {
 }
 Exp::Exp(const std::string name,Node * node, bool is_var, int yylineno): Node(node),is_var(is_var) {
     if(this->is_var){
-        if(sym_table_scopes.symbol_exists(name) == false){
+        if(sym_table_scopes.variable_exists(name) == false){
             errorUndef(yylineno,name);
             exit(ERROR_EXIT);
         }
-
-        Symbol* symbol = sym_table_scopes.get_symbol(name);
-
-            this->type = symbol->get_type();
     }
-}
+    Symbol* symbol = sym_table_scopes.get_symbol(name);
+    this->type = symbol->get_type();
+
+    }
+
+
+
 
 string num_type(const string type){
     if(type == "INT" || type == "BYTE")
@@ -117,13 +131,13 @@ string num_type(const string type){
 }
 
 Call::Call(Node *node, Exp *exp, int yylineno) : Node(node){
-    if(sym_table_scopes.symbol_exists(node->name) == false){
+    if(sym_table_scopes.function_exists(node->name) == false){
         errorUndefFunc(yylineno,node->name);
         exit(ERROR_EXIT);
     }
     this->type = sym_table_scopes.get_symbol(node->name)->get_type();
     if(num_type(exp->type) != sym_table_scopes.get_symbol(node->name)->get_arg_type()){
-        errorPrototypeMismatch(yylineno,node->name,sym_table_scopes.get_symbol(node->name)->get_arg_type());
+        errorPrototypeMismatch(yylineno,node->name,sym_table_scopes.get_symbol(node->name)->get_arg_type_for_print());
         exit(ERROR_EXIT);
     }
 
@@ -139,17 +153,18 @@ Statement::Statement(Node *type, Node *name, int yylineno) {
 
 //assign
 Statement::Statement( Node *name, Exp *exp, int yylineno, bool declare) {
-    if(sym_table_scopes.symbol_exists(name->name) == false){
+    if(sym_table_scopes.variable_exists(name->name) == false){
         errorUndef(yylineno,name->name);
         exit(ERROR_EXIT);
     }
     string type_s = sym_table_scopes.get_symbol(name->name)->get_type();
     if(type_s == "BYTE" && exp->val >= 255 ){
-        errorByteTooLarge(yylineno,"");
+        errorByteTooLarge(yylineno,to_string(exp->val));
         exit(ERROR_EXIT);
     }
     if(exp->type != type_s){
-        if(!not_num(exp->type) && !not_num(type_s)){
+
+        if(!not_num(exp->type) && !not_num(type_s) && type_s != "BYTE"){
             return;
         }
         errorMismatch(yylineno);
@@ -164,12 +179,12 @@ Statement::Statement(Node *type, Node *name, Exp *exp, int yylineno, bool declar
     }
     string type_s = type->name;
     if(type_s == "BYTE" && exp->val >= 255 ){
-        errorByteTooLarge(yylineno,"");
+        errorByteTooLarge(yylineno,to_string(exp->val));
         exit(ERROR_EXIT);
     }
     sym_table_scopes.add_symbol(name->name,type->name,1,  "", false);
     if(exp->type != type_s){
-        if(!not_num(exp->type) && !not_num(type->name)){
+        if(!not_num(exp->type) && !not_num(type->name)&& type_s != "BYTE"){
             return;
         }
         errorMismatch(yylineno);

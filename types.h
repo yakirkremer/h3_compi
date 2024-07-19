@@ -80,7 +80,7 @@ public:
     //Casting
     Exp(Exp* exp, const string type, int yylineno);
     //NUM NUM B STRING TRUE FALSE
-    Exp(const string type, Node * node);
+    Exp(const string type, Node * node,int yylineno);
     // Not EXP ,AND,OR,RELOP, EQUALITY
     Exp(const string type,const string op, Exp * exp1, Exp * exp2, int yylineno);
     //Exp ADDITIVE Exp Exp MULTIPLICATIVE Exp
