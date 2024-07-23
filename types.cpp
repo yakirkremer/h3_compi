@@ -45,6 +45,7 @@ Exp::Exp(Exp *exp, const std::string type, int yylineno) {
     name = exp->name;
 
 
+
 }
 
 Exp::Exp(const string type, Node * node, int yylineno) : Node(node),type(type),is_var(false) {
