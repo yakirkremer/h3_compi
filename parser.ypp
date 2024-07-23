@@ -50,7 +50,7 @@
 %right ELSE
 
 %%
-Program: Statements                         {endScope(sym_table_scopes.scope);}
+Program: Statements                         {}
 Statements: Statement                       {}
 Statements: Statements Statement            {}
 
@@ -106,6 +106,7 @@ Exp: LPAREN Type RPAREN Exp                 {$$ = new Exp(dynamic_cast<Exp*>($4)
 
 void yyerror( const char* yytext) {
     errorSyn(yylineno);
+    exit(ERROR_EXIT);
 
 }
 
@@ -114,5 +115,7 @@ int main() {
     sym_table_scopes.add_symbol("printi", "VOID", 0,{"num"}, true);
     sym_table_scopes.add_symbol("readi", "INT", 0,{"num"} ,true);
     //yydebug = 1;
-    return yyparse();
+    int res = yyparse();
+    endScope(sym_table_scopes.scope);
+    return res;
 }

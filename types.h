@@ -32,8 +32,10 @@ class Node {
 public:
     //vector<string> names;
     string name;
+    int lineno;
 
     Node(const string name = "");
+    Node(const string name, int yylineno);
     Node(const Node* node);
 
     virtual ~Node() = default;
@@ -89,6 +91,7 @@ public:
     Exp(const string name,Node * node ,bool is_var, int yylineno);
 
 };
+
 
 
 Node* makeNode(int node_type,const string type, const string value);
